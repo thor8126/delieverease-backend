@@ -107,6 +107,7 @@ def add_menu_item():
         store_id=store.id,
         name=name,
         price=float(price),
+        image_url=data.get("image_url", "").strip() or "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
         is_available=data.get("is_available", True),
     )
     db.session.add(item)
@@ -138,6 +139,8 @@ def update_menu_item(item_id):
             item.name = data["name"].strip()
         if "price" in data:
             item.price = float(data["price"])
+        if "image_url" in data:
+            item.image_url = data["image_url"].strip()
         if "is_available" in data:
             item.is_available = bool(data["is_available"])
 
@@ -192,3 +195,28 @@ def toggle_store():
 
     db.session.commit()
     return jsonify({"message": f"Store is now {'open' if store.is_open else 'closed'}", "store": store.to_dict()}), 200
+
+
+@merchant_bp.route("/store", methods=["PUT"])
+@jwt_required()
+def update_store():
+    """Update store details (name, category, image_url)."""
+    merchant_id, store, err = _require_merchant()
+    if err:
+        return err
+    if not store:
+        return jsonify({"error": "No store found"}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    if "name" in data and data["name"].strip():
+        store.name = data["name"].strip()
+    if "category" in data and data["category"].strip():
+        store.category = data["category"].strip()
+    if "image_url" in data:
+        store.image_url = data["image_url"].strip()
+
+    db.session.commit()
+    return jsonify({"message": "Store updated", "store": store.to_dict()}), 200

@@ -47,11 +47,13 @@ def register():
         from models import Store
         if not store_name:
             store_name = f"{name}'s Store"
+        store_category = data.get("store_category", "Food").strip() or "Food"
         new_store = Store(
             merchant_id=user.id,
             name=store_name,
-            category="General",
+            category=store_category,
             is_open=True,
+            image_url="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600",
         )
         db.session.add(new_store)
 
