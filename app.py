@@ -1,4 +1,7 @@
 import os
+import eventlet
+eventlet.monkey_patch()
+
 from datetime import timedelta
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -21,7 +24,17 @@ app = Flask(__name__)
 
 # Configuration
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "deliverease-secret-key-change-in-production")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///deliverease.db")
+
+db_url = os.environ.get("DATABASE_URL", "sqlite:///deliverease.db")
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+
+if db_url.startswith("sqlite"):
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "connect_args": {"check_same_thread": False}
+    }
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "jwt-secret-change-in-production")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
@@ -41,6 +54,22 @@ app.register_blueprint(merchant_bp)
 # Register socket events
 register_socket_events(socketio)
 
+
+# Global Error Handling
+from werkzeug.exceptions import HTTPException
+import traceback
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # pass through HTTP errors
+    if isinstance(e, HTTPException):
+        return e
+    
+    # Send traceback to Render logs
+    print("Unhandled Exception:", traceback.format_exc())
+    
+    # Return JSON so the frontend receives a proper error string instead of breaking CORS
+    return jsonify({"error": "An internal server error occurred. Check the backend logs."}), 500
 
 # Profile endpoint (all roles)
 from flask_jwt_extended import jwt_required, get_jwt_identity
