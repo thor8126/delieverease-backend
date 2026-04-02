@@ -58,6 +58,7 @@ class MenuItem(db.Model):
     store_id = db.Column(db.Integer, db.ForeignKey("stores.id"), nullable=False)
     name = db.Column(db.String(120), nullable=False)
     price = db.Column(db.Float, nullable=False)
+    image_url = db.Column(db.String(256), default="")
     is_available = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
@@ -66,6 +67,7 @@ class MenuItem(db.Model):
             "store_id": self.store_id,
             "name": self.name,
             "price": self.price,
+            "image_url": self.image_url,
             "is_available": self.is_available,
         }
 
