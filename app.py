@@ -30,9 +30,11 @@ if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 
+from sqlalchemy.pool import NullPool
 if db_url.startswith("sqlite"):
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": {"check_same_thread": False}
+        "connect_args": {"check_same_thread": False},
+        "poolclass": NullPool
     }
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
