@@ -117,3 +117,31 @@ def earnings():
             "date": o.created_at.isoformat() if o.created_at else None,
         } for o in delivered],
     }), 200
+
+@rider_bp.route("/summary", methods=["GET"])
+@jwt_required()
+def summary():
+    """Get rider summary including overall rating."""
+    rider_id, err = _require_rider()
+    if err:
+        return err
+
+    from models import Review
+    delivered_orders = Order.query.filter_by(rider_id=rider_id, status="delivered").all()
+    
+    total_rating = 0
+    rating_count = 0
+    
+    for order in delivered_orders:
+        for review in order.reviews:
+            if review.rating:
+                total_rating += review.rating
+                rating_count += 1
+                
+    average_rating = total_rating / rating_count if rating_count > 0 else 5.0
+    
+    return jsonify({
+        "average_rating": round(average_rating, 1),
+        "review_count": rating_count,
+        "total_deliveries": len(delivered_orders)
+    }), 200
