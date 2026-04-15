@@ -157,6 +157,25 @@ with app.app_context():
     db.create_all()
     seed_database()
 
+    # Ensure owner account exists (safe for existing production DBs)
+    def ensure_owner():
+        owner = User.query.filter_by(email="owner@deliverease.com").first()
+        if not owner:
+            owner = User(
+                name="Platform Owner",
+                email="owner@deliverease.com",
+                password_hash=generate_password_hash("password123"),
+                role="owner",
+                address="DeliverEase HQ",
+            )
+            db.session.add(owner)
+            db.session.commit()
+            print("✅ Owner account created: owner@deliverease.com")
+        else:
+            print("✅ Owner account already exists.")
+
+    ensure_owner()
+
 # Start keep-alive after DB is ready
 keep_alive()
 
