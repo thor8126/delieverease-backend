@@ -15,6 +15,7 @@ from routes.auth import auth_bp
 from routes.customer import customer_bp
 from routes.rider import rider_bp
 from routes.merchant import merchant_bp
+from routes.owner import owner_bp
 
 # ---------------------------------------------------------------------------
 # App factory
@@ -52,6 +53,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(customer_bp)
 app.register_blueprint(rider_bp)
 app.register_blueprint(merchant_bp)
+app.register_blueprint(owner_bp)
 
 # Register socket events
 register_socket_events(socketio)

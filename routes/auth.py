@@ -27,6 +27,10 @@ def register():
     if role not in ["customer", "rider", "merchant"]:
         return jsonify({"error": "Invalid role"}), 400
 
+    # Owner accounts cannot be created via public registration
+    if role == "owner":
+        return jsonify({"error": "Owner accounts cannot be registered"}), 403
+
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters"}), 400
 

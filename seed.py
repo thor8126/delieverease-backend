@@ -13,6 +13,16 @@ def seed_database():
     # Default password for all demo accounts
     default_pw = generate_password_hash("password123")
 
+    # Platform Owner account
+    owner = User(
+        name="Platform Owner",
+        email="owner@deliverease.com",
+        password_hash=default_pw,
+        role="owner",
+        address="DeliverEase HQ",
+    )
+    db.session.add(owner)
+
     # Merchant account
     merchant = User(
         name="Pizza Palace",
@@ -145,8 +155,10 @@ def seed_database():
     db.session.commit()
     print("Database seeded successfully!")
     print("  Demo accounts (password: password123):")
+    print("    Owner:    owner@deliverease.com")
     print("    Customer: customer@demo.com")
     print("    Rider:    rider@demo.com")
     print("    Merchant: merchant@demo.com  (Pizza Palace)")
     print("    Merchant: merchant2@demo.com (FreshMart)")
     print("    Merchant: merchant3@demo.com (Sweet Crust Bakery)")
+
