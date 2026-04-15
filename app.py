@@ -122,11 +122,43 @@ def health():
 
 
 # ---------------------------------------------------------------------------
+# Keep-alive: self-ping every 5 min to prevent Render free-tier spin-down
+# ---------------------------------------------------------------------------
+import threading
+import urllib.request
+
+def keep_alive():
+    """Ping our own /health endpoint every 5 minutes."""
+    url = os.environ.get("RENDER_EXTERNAL_URL", "")
+    if not url:
+        print("⏸️  RENDER_EXTERNAL_URL not set — keep-alive disabled (local dev).")
+        return
+
+    health_url = f"{url}/health"
+    print(f"💓 Keep-alive started — pinging {health_url} every 5 min")
+
+    def ping():
+        while True:
+            try:
+                urllib.request.urlopen(health_url, timeout=10)
+                print("💓 Keep-alive ping OK")
+            except Exception as e:
+                print(f"💓 Keep-alive ping failed: {e}")
+            eventlet.sleep(300)  # 5 minutes
+
+    t = threading.Thread(target=ping, daemon=True)
+    t.start()
+
+
+# ---------------------------------------------------------------------------
 # Initialize DB and seed
 # ---------------------------------------------------------------------------
 with app.app_context():
     db.create_all()
     seed_database()
+
+# Start keep-alive after DB is ready
+keep_alive()
 
 
 if __name__ == "__main__":
@@ -134,3 +166,4 @@ if __name__ == "__main__":
     debug = os.environ.get("FLASK_ENV", "development") == "development"
     print(f"\n🚀 DeliverEase API running on http://localhost:{port}\n")
     socketio.run(app, host="0.0.0.0", port=port, debug=debug)
+
